@@ -4,6 +4,8 @@
     {
         public static void Main(string[] args)
         {
+            Console.WriteLine("\t\t\t\t\t\tPhone Contact Manager\n");
+
             try
             {
                 Starter.Run();
