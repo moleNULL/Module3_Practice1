@@ -1,8 +1,8 @@
-﻿using System.Globalization;
-using System.Text.Json;
+﻿using System.Text.Json;
 
 namespace PhoneContactProject
 {
+    // class is used to extract CultureInfo from config.json
     internal class Config
     {
         private readonly string _configFile;

@@ -1,9 +1,8 @@
 ﻿namespace PhoneContactProject.Interfaces
 {
-    internal interface IRecord
+    internal interface IRecord : IComparable<IRecord>
     {
-        char Letter { get; }
-        string Name { get; }
-        string Number { get; }
+        string Name { get; set; }
+        string Number { get; set; }
     }
 }

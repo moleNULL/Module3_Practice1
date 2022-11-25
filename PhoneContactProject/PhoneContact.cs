@@ -1,14 +1,14 @@
-﻿using System.Globalization;
-using System.Collections;
-using PhoneContactProject.Interfaces;
-using PhoneContactProject.Alphabets;
+﻿global using System.Globalization;
+global using System.Collections;
+global using PhoneContactProject.Interfaces;
+global using PhoneContactProject.Alphabets;
 
 namespace PhoneContactProject
 {
-    internal class PhoneContact : IMyCollection, IEnumerable<KeyValuePair<char, List<PhoneRecord>>>
+    internal class PhoneContact : IMyCollection, IEnumerable<KeyValuePair<char, List<IRecord>>>
     {
         private readonly List<CultureInfo> _cultures;
-        private Dictionary<char, List<PhoneRecord>> _phones;
+        private Dictionary<char, List<IRecord>> _phones;
 
         public PhoneContact(Config config)
         {
@@ -17,21 +17,29 @@ namespace PhoneContactProject
             _phones = FillPhoneContactsWithLetters();
         }
 
-        public void Add(IRecord record)
+        // Add record and sort after IF it is not a duplicate (the same Name, the same Number)
+        public bool Add(IRecord record)
         {
             // we compare letter in upper-case only
-            // but save contatc in any case
+            // but save contact in any case
             char phoneLetter = char.ToUpper(record.Name[0]);
 
             bool constains = _phones.ContainsKey(phoneLetter);
-            if (constains)
+            if (!constains)
             {
-                _phones[phoneLetter].Add((PhoneRecord)record);
+                // if char is not in letterList -> replace it with the default char: '#'
+                phoneLetter = '#';
             }
-            else
+
+            if (IsValid(_phones[phoneLetter], record))
             {
-                _phones['#'].Add((PhoneRecord)record);
+                _phones[phoneLetter].Add(record);
+                _phones[phoneLetter].Sort();
+
+                return true;
             }
+
+            return false;
         }
 
         public bool Remove(string name)
@@ -52,28 +60,23 @@ namespace PhoneContactProject
             return false;
         }
 
-        public void Print()
+        // Add 10 contacts by default
+        public void FillWithInitialData()
         {
-            foreach (var phone in _phones)
-            {
-                // prevent printing letters that have no records
-                if (phone.Value.Count > 0)
-                {
-                    Console.WriteLine($"{phone.Key}:");
+            Add(new PhoneRecord("Alison",   "+108954604147"));
+            Add(new PhoneRecord("Amory",    "+109522226520"));
+            Add(new PhoneRecord("Карина",   "+380639546058"));
+            Add(new PhoneRecord("Савелій",  "+380957806148"));
+            Add(new PhoneRecord("Настя",    "+380985293461"));
 
-                    phone.Value.Sort();
-
-                    foreach (var record in phone.Value)
-                    {
-                        Console.WriteLine($"\t{record.Name}: {record.Number}");
-                    }
-
-                    Console.WriteLine();
-                }
-            }
+            Add(new PhoneRecord("Aaron",    "+106156692340"));
+            Add(new PhoneRecord("Ын Ким",   "+850649945045"));
+            Add(new PhoneRecord("Крістіна", "+380965420453"));
+            Add(new PhoneRecord("4_Єгор",    "+380661234559"));
+            Add(new PhoneRecord("John",     "+380501298412"));
         }
 
-        public IEnumerator<KeyValuePair<char, List<PhoneRecord>>> GetEnumerator()
+        public IEnumerator<KeyValuePair<char, List<IRecord>>> GetEnumerator()
         {
             return _phones.GetEnumerator();
         }
@@ -84,14 +87,14 @@ namespace PhoneContactProject
         }
 
         // Fill dictionary: letterList[i] -> Dictionary.[Key]
-        private Dictionary<char, List<PhoneRecord>> FillPhoneContactsWithLetters()
+        private Dictionary<char, List<IRecord>> FillPhoneContactsWithLetters()
         {
             List<char> letterList = GenerateLettersList();
-            var phones = new Dictionary<char, List<PhoneRecord>>(letterList.Count);
+            var phones = new Dictionary<char, List<IRecord>>(letterList.Count);
 
             for (int i = 0; i < letterList.Count; i++)
             {
-                phones[letterList[i]] = new List<PhoneRecord>();
+                phones[letterList[i]] = new List<IRecord>();
             }
 
             return phones;
@@ -128,6 +131,47 @@ namespace PhoneContactProject
             letterList.Add('#');
 
             return letterList;
+        }
+
+        // Validate record -> correct number and check if not a duplicate
+        private bool IsValid(List<IRecord> records, IRecord record)
+        {
+            // get rid of unnecessary spaces
+            record.Name = record.Name.Trim();
+            record.Number = record.Number.Trim();
+
+            // +380 564 - not allowed
+            if (record.Number.Contains(" "))
+            {
+                return false;
+            }
+
+            // +38050.. -> 38050..
+            if (!decimal.TryParse(record.Number[1..], out var _))
+            {
+                return false;
+            }
+
+            if (IsRecordDuplicate(records, record))
+            {
+                return false;
+            }
+
+            return true;
+        }
+
+        // check current record is not a duplicate (the same Name + the same Number)
+        private bool IsRecordDuplicate(List<IRecord> records, IRecord record)
+        {
+            foreach (var currentRecord in records)
+            {
+                if (record.CompareTo(currentRecord) == 0)
+                {
+                    return true;
+                }
+            }
+
+            return false;
         }
     }
 }

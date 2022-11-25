@@ -1,6 +1,4 @@
-﻿using PhoneContactProject.Interfaces;
-
-namespace PhoneContactProject.Alphabets
+﻿namespace PhoneContactProject.Alphabets
 {
     internal class AlphabetEnglish : IAlphabet
     {
